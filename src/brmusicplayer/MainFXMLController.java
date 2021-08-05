@@ -38,8 +38,9 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.images.Artwork;
 import java.io.File;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.media.Media;
@@ -48,12 +49,19 @@ import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 
 public class MainFXMLController {
 
+    @FXML // fx:id="gridPaneMain"
+    private GridPane gridPaneMain; // Value injected by FXMLLoader
 
     @FXML // fx:id="gridPaneButtons"
     private GridPane gridPaneButtons; // Value injected by FXMLLoader
+
+    @FXML // fx:id="gridPaneInformationProgress"
+    private GridPane gridPaneInformationProgress; // Value injected by FXMLLoader
 
     @FXML // fx:id="sliderProgress"
     private Slider sliderProgress; // Value injected by FXMLLoader
@@ -64,6 +72,39 @@ public class MainFXMLController {
     @FXML // fx:id="labelDuration"
     private Label labelDuration; // Value injected by FXMLLoader
 
+    @FXML // fx:id="gridPaneControls"
+    private GridPane gridPaneControls; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewOpenFiles"
+    private ImageView imageViewOpenFiles; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewPlayPause"
+    private ImageView imageViewPlayPause; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewStop"
+    private ImageView imageViewStop; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewPrevious"
+    private ImageView imageViewPrevious; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewNext"
+    private ImageView imageViewNext; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewEqualizer"
+    private ImageView imageViewEqualizer; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewOpenDirectory"
+    private ImageView imageViewOpenDirectory; // Value injected by FXMLLoader
+
+    @FXML // fx:id="imageViewVoumeUp"
+    private ImageView imageViewVoumeUp; // Value injected by FXMLLoader
+
+    @FXML // fx:id="sliderVolume"
+    private Slider sliderVolume; // Value injected by FXMLLoader
+
+    @FXML // fx:id="gridPaneInformation"
+    private GridPane gridPaneInformation; // Value injected by FXMLLoader
+
     @FXML // fx:id="paneImage"
     private Pane paneImage; // Value injected by FXMLLoader
 
@@ -73,14 +114,14 @@ public class MainFXMLController {
     @FXML // fx:id="labelTitle"
     private Label labelTitle; // Value injected by FXMLLoader
 
-    @FXML // fx:id="labelArtist"
-    private Label labelArtist; // Value injected by FXMLLoader
+    @FXML // fx:id="labelGenre"
+    private Label labelGenre; // Value injected by FXMLLoader
 
     @FXML // fx:id="labelAlbum"
     private Label labelAlbum; // Value injected by FXMLLoader
 
-    @FXML // fx:id="labelGenre"
-    private Label labelGenre; // Value injected by FXMLLoader
+    @FXML // fx:id="labelArtist"
+    private Label labelArtist; // Value injected by FXMLLoader
     
     
     //Colors
@@ -115,27 +156,33 @@ public class MainFXMLController {
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
+        sliderVolume.valueProperty().addListener((Observable observable) -> {
+            mediaPlayer.setVolume(sliderVolume.getValue()/100);
+        });
     }
     
     @FXML
-    private void openFiles(javafx.scene.input.MouseEvent evt){
+    private void openFiles(MouseEvent event){
         
-        List<File> files = fileChooser.showOpenMultipleDialog(null);
-        listingMusic.clear();
-        if(files != null){
-            
-            if(!files.isEmpty()){
-                files.forEach(file -> {
-                    listingMusic.addToBack(file.getAbsolutePath(),file.toURI().toString());
-                });
-                
-                actualNodet = listingMusic.getFrontNodet();
-                loadMetadata();
-                openMusic();
+        if(event.getButton() == MouseButton.PRIMARY){
+        
+            List<File> files = fileChooser.showOpenMultipleDialog(null);
+            listingMusic.clear();
+            if(files != null){
+
+                if(!files.isEmpty()){
+                    files.forEach(file -> {
+                        listingMusic.addToBack(file.getAbsolutePath(),file.toURI().toString());
+                    });
+
+                    actualNodet = listingMusic.getFrontNodet();
+                    loadMetadata();
+                    openMusic();
+                }
+
             }
-           
+            files = null;
         }
-        files = null;
         
     }
     
@@ -210,6 +257,10 @@ public class MainFXMLController {
             currentTime = null;
         });
         
+        sliderVolume.setValue(mediaPlayer.getVolume()*100);
+        
+        
+        
 
         mediaPlayer.setOnReady(() -> {
             
@@ -228,21 +279,77 @@ public class MainFXMLController {
     @FXML
     public void onMouseSlider(){
         mediaPlayer.seek(javafx.util.Duration.seconds(sliderProgress.getValue()));
-        
     }
     
     @FXML
-    public void pauseVideo(ActionEvent event){
-        mediaPlayer.pause();
+    public void stopButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            mediaPlayer.stop();
+        }
     }
     @FXML
-    public void stopVideo(ActionEvent event){
-        mediaPlayer.stop();
+    public void playPauseButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            mediaPlayer.play();
+        }
     }
+    
     @FXML
-    public void playVideo(ActionEvent event){
-        mediaPlayer.play();
-        mediaPlayer.setRate(1);
+    public void nextButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(actualNodet.getNext() != null){
+                actualNodet = actualNodet.getNext();
+                loadMetadata();
+                openMusic();
+            }
+        }
+    }
+    
+    @FXML
+    public void previousButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(actualNodet.getPrevious()!= null){
+                actualNodet = actualNodet.getPrevious();
+                loadMetadata();
+                openMusic();
+            }
+        }
+    }
+    
+    @FXML
+    public void openDirectory(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            
+        }
+    }
+    
+    @FXML
+    public void volumeDownButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(sliderVolume.getValue() - 10 > 0){
+                sliderVolume.setValue(sliderVolume.getValue() - 10);
+            }else{
+                sliderVolume.setValue(0);
+            }
+        }
+    }
+    
+    @FXML
+    public void volumeUpButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(sliderVolume.getValue() + 10 < 100){
+                sliderVolume.setValue(sliderVolume.getValue() + 10);
+            }else{
+                sliderVolume.setValue(100);
+            }
+        }
+    }
+    
+    @FXML
+    public void equalizerButton(MouseEvent event){
+       if(event.getButton() == MouseButton.PRIMARY){
+           
+       }
     }
     
     public void setColors(Image image) {
