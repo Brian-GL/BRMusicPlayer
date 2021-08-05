@@ -39,7 +39,7 @@
                 <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Slider fx:id="sliderProgress" blockIncrement="1.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="30.0" minWidth="1080.0" onMouseDragged="#onMouseSlider" onMousePressed="#onMouseSlider" prefHeight="30.0" prefWidth="1080.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
+                  <Slider fx:id="sliderProgress" blockIncrement="1.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="30.0" minWidth="1080.0" onMouseDragged="#onMouseSlider" onMousePressed="#onMouseSlider" opacity="0.5" prefHeight="30.0" prefWidth="1080.0" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
                      <cursor>
                         <Cursor fx:constant="HAND" />
                      </cursor>
@@ -65,7 +65,12 @@
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="55.0" minWidth="55.0" prefWidth="55.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="150.0" minWidth="150.0" prefWidth="150.0" />
                 <ColumnConstraints hgrow="SOMETIMES" maxWidth="50.0" minWidth="50.0" prefWidth="50.0" />
@@ -99,26 +104,56 @@
                         <Image url="@../resources/images/next-button.png" />
                      </image>
                   </ImageView>
-                  <ImageView fx:id="imageViewEqualizer" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#equalizerButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="6">
+                  <ImageView fx:id="imageViewEqualizer" fitHeight="50.0" fitWidth="47.0" layoutY="7.0" onMouseClicked="#equalizerButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="6">
                      <image>
                         <Image url="@../resources/images/sound-mixer.png" />
                      </image>
                   </ImageView>
-                  <ImageView fx:id="imageViewOpenDirectory" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="imageViewOpenDirectory" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#openDirectory" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../resources/images/music-book.png" />
                      </image>
                   </ImageView>
-                  <ImageView fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#volumeDownButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="8">
+                  <ImageView fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#volumeDownButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="13">
                      <image>
                         <Image url="@../resources/images/volume-down.png" />
                      </image>
                   </ImageView>
-                  <ImageView fx:id="imageViewVoumeUp" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#volumeUpButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="10">
+                  <ImageView fx:id="imageViewVoumeUp" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#volumeUpButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="15">
                      <image>
                         <Image url="@../resources/images/volume-up.png" />
                      </image></ImageView>
-                  <Slider fx:id="sliderVolume" blockIncrement="1.0" maxHeight="50.0" maxWidth="150.0" minHeight="50.0" minWidth="150.0" prefHeight="50.0" prefWidth="150.0" GridPane.columnIndex="9" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <Slider fx:id="sliderVolume" blockIncrement="1.0" maxHeight="50.0" maxWidth="150.0" minHeight="50.0" minWidth="150.0" opacity="0.69" prefHeight="50.0" prefWidth="150.0" GridPane.columnIndex="14" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                  <ImageView fx:id="imageViewMuteUnmute" fitHeight="50.0" fitWidth="50.0" layoutY="7.0" onMouseClicked="#muteUnmuteButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="7">
+                     <image>
+                        <Image url="@../resources/images/volume.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="50.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="8">
+                     <image>
+                        <Image url="@../resources/images/playlist.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="50.0" fitWidth="50.0" onMouseClicked="#rateUpButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="12">
+                     <image>
+                        <Image url="@../resources/images/rabbit.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fitHeight="50.0" fitWidth="50.0" onMouseClicked="#rateDownButton" pickOnBounds="true" preserveRatio="true" GridPane.columnIndex="10">
+                     <image>
+                        <Image url="@../resources/images/snail.png" />
+                     </image>
+                  </ImageView>
+                  <Slider fx:id="sliderRate" blockIncrement="0.1" max="2.0" maxHeight="50.0" maxWidth="150.0" minHeight="50.0" minWidth="150.0" onMouseClicked="#rateNormalState" opacity="0.78" prefHeight="50.0" prefWidth="150.0" value="1.0" GridPane.columnIndex="11" />
+                  <Pane GridPane.columnIndex="9">
+                     <children>
+                        <Label fx:id="labelSongsCount" alignment="CENTER" contentDisplay="CENTER" layoutX="194.0" layoutY="14.0" text="0/0" textAlignment="JUSTIFY" textFill="WHITE">
+                           <font>
+                              <Font name="Gadugi" size="22.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </Pane>
                </children>
             </GridPane>
          </children>
@@ -133,7 +168,7 @@
          <children>
             <Pane fx:id="paneImage" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="630.0" minWidth="900.0" prefHeight="630.0" prefWidth="900.0" style="-fx-background-color: rgba(10,20,30,0.7);" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
                <children>
-                  <ImageView fx:id="imageViewCoverArt" fitHeight="600.0" fitWidth="600.0" layoutX="100.0" layoutY="15.0" mouseTransparent="true" pickOnBounds="true" preserveRatio="true">
+                  <ImageView fx:id="imageViewCoverArt" fitHeight="500.0" fitWidth="500.0" layoutX="125.0" layoutY="65.0" mouseTransparent="true" pickOnBounds="true" preserveRatio="true">
                      <cursor>
                         <Cursor fx:constant="DISAPPEAR" />
                      </cursor>

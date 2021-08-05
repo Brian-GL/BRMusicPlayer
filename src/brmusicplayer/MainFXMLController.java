@@ -5,7 +5,6 @@
  */
 package brmusicplayer;
 
-import data_structures.ColorCount;
 import java.util.Random;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
@@ -14,9 +13,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import data_structures.Doublet;
 import data_structures.DoubletListing;
-import data_structures.Mode;
 import data_structures.Nodet;
-import data_structures.PriorityQueue;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -41,7 +38,7 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.images.Artwork;
 import java.io.File;
-import javafx.beans.InvalidationListener;
+import java.io.FileFilter;
 import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -54,17 +51,14 @@ import javafx.util.Duration;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.stage.DirectoryChooser;
 
 public class MainFXMLController {
 
-    @FXML // fx:id="gridPaneMain"
-    private GridPane gridPaneMain; // Value injected by FXMLLoader
+    /**FXML Attributes*/
 
     @FXML // fx:id="gridPaneButtons"
     private GridPane gridPaneButtons; // Value injected by FXMLLoader
-
-    @FXML // fx:id="gridPaneInformationProgress"
-    private GridPane gridPaneInformationProgress; // Value injected by FXMLLoader
 
     @FXML // fx:id="sliderProgress"
     private Slider sliderProgress; // Value injected by FXMLLoader
@@ -75,38 +69,20 @@ public class MainFXMLController {
     @FXML // fx:id="labelDuration"
     private Label labelDuration; // Value injected by FXMLLoader
 
-    @FXML // fx:id="gridPaneControls"
-    private GridPane gridPaneControls; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewOpenFiles"
-    private ImageView imageViewOpenFiles; // Value injected by FXMLLoader
-
     @FXML // fx:id="imageViewPlayPause"
     private ImageView imageViewPlayPause; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewStop"
-    private ImageView imageViewStop; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewPrevious"
-    private ImageView imageViewPrevious; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewNext"
-    private ImageView imageViewNext; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewEqualizer"
-    private ImageView imageViewEqualizer; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewOpenDirectory"
-    private ImageView imageViewOpenDirectory; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageViewVoumeUp"
-    private ImageView imageViewVoumeUp; // Value injected by FXMLLoader
 
     @FXML // fx:id="sliderVolume"
     private Slider sliderVolume; // Value injected by FXMLLoader
 
-    @FXML // fx:id="gridPaneInformation"
-    private GridPane gridPaneInformation; // Value injected by FXMLLoader
+    @FXML // fx:id="imageViewMuteUnmute"
+    private ImageView imageViewMuteUnmute; // Value injected by FXMLLoader
+    
+    @FXML // fx:id="labelSongsCount"
+    private Label labelSongsCount; // Value injected by FXMLLoade
+
+    @FXML // fx:id="sliderRate"
+    private Slider sliderRate; // Value injected by FXMLLoader
 
     @FXML // fx:id="paneImage"
     private Pane paneImage; // Value injected by FXMLLoader
@@ -125,66 +101,71 @@ public class MainFXMLController {
 
     @FXML // fx:id="labelArtist"
     private Label labelArtist; // Value injected by FXMLLoader
-    
-    
-    //Colors
-    private Color firstColor;
-    private Color secondColor;
-    private Color thirdColor;
-    private Color fontColor;
-    
+ 
+    //Private Attributes
     private final Random colorRandom;
-    private int actualLenght;
+    private long actualLenght;
     private MediaPlayer mediaPlayer;
-    private FileChooser fileChooser;
+    private final Image playImage;
+    private final Image pauseImage;
+    private final Image muteImage;
+    private final Image unmuteImage;
+    private int index;
     
     //Data Stuctures
-    private DoubletListing<String,String> listingMusic;
+    private final DoubletListing<String,String> listingMusic;
     private Nodet<Doublet<String,String>> actualNodet;
     
     
+    
     public MainFXMLController(){
-        firstColor = new Color(0,0,0,1.0);
-        secondColor = new Color(0,0,0,1.0);
-        thirdColor = new Color(0,0,0,1.0);
-        fontColor = new Color(0,0,0,1.0);
         colorRandom = new Random(System.currentTimeMillis());
         listingMusic = new DoubletListing<>();
-        fileChooser = new FileChooser();
-        fileChooser.setTitle("Choose Music Files");
-        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Music Files (*.mp3)", "*.mp3");
-        fileChooser.getExtensionFilters().add(extFilter);
+        playImage = new Image(BRMusicPlayer.class.getResourceAsStream( "../resources/images/play-button.png" ));
+        pauseImage = new Image(BRMusicPlayer.class.getResourceAsStream( "../resources/images/pause.png" ));
+        muteImage = new Image(BRMusicPlayer.class.getResourceAsStream( "../resources/images/muted.png" ));
+        unmuteImage = new Image(BRMusicPlayer.class.getResourceAsStream( "../resources/images/volume.png" ));
     }
-    
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
         sliderVolume.valueProperty().addListener((Observable observable) -> {
             mediaPlayer.setVolume(sliderVolume.getValue()/100);
         });
+        
+        sliderRate.valueProperty().addListener((Observable observable) -> {
+            mediaPlayer.setRate(sliderRate.getValue());
+        });
     }
     
     @FXML
-    private void openFiles(MouseEvent event){
+    public void openFiles(MouseEvent event){
         
         if(event.getButton() == MouseButton.PRIMARY){
-        
-            List<File> files = fileChooser.showOpenMultipleDialog(null);
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose Music Files");
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Music Files (*.mp3) (*.flac)", "*.mp3","*.flac");
+            fileChooser.getExtensionFilters().add(extFilter);
+            List<File> openedFiles = fileChooser.showOpenMultipleDialog(null);
             listingMusic.clear();
-            if(files != null){
+            if(openedFiles != null){
 
-                if(!files.isEmpty()){
-                    files.forEach(file -> {
+                if(!openedFiles.isEmpty()){
+                    openedFiles.forEach(file -> {
                         listingMusic.addToBack(file.getAbsolutePath(),file.toURI().toString());
                     });
 
+                    index = 1;
                     actualNodet = listingMusic.getFrontNodet();
                     loadMetadata();
-                    openMusic();
+                    playMusic();
                 }
-
             }
-            files = null;
+            
+            openedFiles = null;
+            fileChooser = null;
+            extFilter = null;
+            
         }
         
     }
@@ -198,7 +179,7 @@ public class MainFXMLController {
             String artist = tag.getFirst(FieldKey.ARTIST);
             String album = tag.getFirst(FieldKey.ALBUM);
             String genre = tag.getFirst(FieldKey.GENRE);
-            actualLenght = audioFile.getAudioHeader().getTrackLength()*1000;
+            actualLenght = audioFile.getAudioHeader().getTrackLength();
             
             Tooltip titleTooltip = new Tooltip("Title: "+title);
             Tooltip artistTooltip = new Tooltip("Artist: "+artist);
@@ -214,30 +195,43 @@ public class MainFXMLController {
             labelGenre.setText(genre);
             labelGenre.setTooltip(genreTooltip);
             
-            //Get the artwork from the mp3 file:
             Artwork artWork = tag.getFirstArtwork();
-            BufferedImage resizedImage = new BufferedImage(600,600,BufferedImage.TYPE_INT_RGB);
+            BufferedImage resizedImage = new BufferedImage(500,500,BufferedImage.TYPE_INT_RGB);
             Graphics2D g2 = resizedImage.createGraphics();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage((BufferedImage)artWork.getImage(), 0, 0,600,600,null);
+            g2.drawImage((BufferedImage)artWork.getImage(), 0, 0,500,500,null);
             g2.dispose();
+            
             Image coverArt = SwingFXUtils.toFXImage((resizedImage), null);
             setColors(coverArt);
             
             imageViewCoverArt.setImage(coverArt);
+            
+            String listCount = index+"/"+listingMusic.getSize();
+            labelSongsCount.setText(listCount);
+            
+            g2 = null;
             readFile = null;
-            coverArt = null;
+            listCount = null;
+            audioFile = null;
+            tag = null;
+            title = null;
+            artist = null;
+            album = null;
+            genre = null;
             titleTooltip = null;
             artistTooltip = null;
             albumTooltip = null;
             genreTooltip = null;
+            artWork = null;
+            resizedImage = null;
+            coverArt = null;
         } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException ex) {
             System.out.println("brmusicplayer.MainFXMLController.loadMetadata(): "+ex.getMessage());
         }
     }
     
-    public void openMusic(){
-        
+    public void cleanMediaPlayer(){
         if(mediaPlayer != null){
             if(mediaPlayer.getStatus().equals(Status.PLAYING)
                     || mediaPlayer.getStatus().equals(Status.PAUSED)){
@@ -249,36 +243,48 @@ public class MainFXMLController {
             mediaPlayer = null;
             System.gc();
         }
+    }
+    
+    public void setMediaPlayerEvents(){
+        if(mediaPlayer != null){
+            mediaPlayer.currentTimeProperty().addListener((ObservableValue<? extends javafx.util.Duration> observable, javafx.util.Duration oldValue, javafx.util.Duration newValue) -> {
+                Double currentTime = newValue.toSeconds();
+                sliderProgress.setValue(currentTime);
+                labelProgress.setText(secondsToString(currentTime.longValue()));
+
+                if(currentTime.longValue() == actualLenght)
+                    playNext();
+            
+                currentTime = null;
+            });
+
+            sliderVolume.setValue(mediaPlayer.getVolume()*100);
+            sliderRate.setValue(mediaPlayer.getRate());
+            mediaPlayer.setOnReady(() -> {
+
+                Duration total = new Duration(actualLenght*1000);
+                Double seconds = total.toSeconds();
+                sliderProgress.setMax(seconds);
+                labelDuration.setText(secondsToString(seconds.longValue()));
+                seconds = null;
+                total = null;
+            });
+        }
+    }
+    
+    public void playMusic(){
+        
+        cleanMediaPlayer();
         
         Media media = new Media(actualNodet.getValue().getSecondElement());
         mediaPlayer = new MediaPlayer(media);
-        
-        mediaPlayer.currentTimeProperty().addListener((ObservableValue<? extends javafx.util.Duration> observable, javafx.util.Duration oldValue, javafx.util.Duration newValue) -> {
-            Double currentTime = newValue.toSeconds();
-            sliderProgress.setValue(currentTime);
-            labelProgress.setText(secondsToString(currentTime.longValue()));
-            currentTime = null;
-        });
-        
-        sliderVolume.setValue(mediaPlayer.getVolume()*100);
-        
-        
-        
-
-        mediaPlayer.setOnReady(() -> {
-            
-            Duration total = new Duration(actualLenght);
-            Double seconds = total.toSeconds();
-            sliderProgress.setMax(seconds);
-            labelDuration.setText(secondsToString(seconds.longValue()));
-            seconds = null;
-        });
-        
-
+        setMediaPlayerEvents();
         mediaPlayer.play();
+        imageViewPlayPause.setImage(pauseImage);
+        imageViewMuteUnmute.setImage(muteImage);
         media = null;
-        
     }
+    
     @FXML
     public void onMouseSlider(){
         mediaPlayer.seek(javafx.util.Duration.seconds(sliderProgress.getValue()));
@@ -287,24 +293,44 @@ public class MainFXMLController {
     @FXML
     public void stopButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
-            mediaPlayer.stop();
+            if(mediaPlayer != null){
+                mediaPlayer.stop();
+                imageViewPlayPause.setImage(playImage);
+                imageViewMuteUnmute.setImage(muteImage);
+            }
         }
     }
     @FXML
     public void playPauseButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
-            mediaPlayer.play();
+            if(mediaPlayer != null){
+                if(mediaPlayer.getStatus().equals(Status.PAUSED)){
+                    imageViewPlayPause.setImage(pauseImage);
+                    imageViewMuteUnmute.setImage(unmuteImage);
+                    mediaPlayer.play();
+                }
+                else if(mediaPlayer.getStatus().equals(Status.PLAYING)){
+                    imageViewPlayPause.setImage(playImage);
+                    imageViewMuteUnmute.setImage(muteImage);
+                    mediaPlayer.pause();
+                }
+            }
         }
     }
     
     @FXML
     public void nextButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
-            if(actualNodet.getNext() != null){
-                actualNodet = actualNodet.getNext();
-                loadMetadata();
-                openMusic();
-            }
+            playNext();
+        }
+    }
+    
+    private void playNext(){
+    if(actualNodet.getNext() != null){
+            index++;
+            actualNodet = actualNodet.getNext();
+            loadMetadata();
+            playMusic();
         }
     }
     
@@ -312,9 +338,10 @@ public class MainFXMLController {
     public void previousButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
             if(actualNodet.getPrevious()!= null){
+                index--;
                 actualNodet = actualNodet.getPrevious();
                 loadMetadata();
-                openMusic();
+                playMusic();
             }
         }
     }
@@ -322,17 +349,48 @@ public class MainFXMLController {
     @FXML
     public void openDirectory(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose Directory Music Files");
+            File directory = directoryChooser.showDialog(null);
+            listingMusic.clear();
+            if(directory != null){
+                FileFilter musicFilter = (File file) -> {
+                    return file.getName().endsWith(".mp3") || file.getName().endsWith(".flac") || file.getName().endsWith(".wma") || file.getName().endsWith(".m4a");
+                };
+                File[] files = directory.listFiles(musicFilter);
+                if(files.length > 0){
+                    
+                    for(File file: files)
+                        listingMusic.addToBack(file.getAbsolutePath(),file.toURI().toString());
+                    
+                    actualNodet = listingMusic.getFrontNodet();
+                    loadMetadata();
+                    playMusic();
+                }
+                
+                files = null;
+                
+                musicFilter = null;
+            }
+            
+            directoryChooser = null;
+            directory = null;
             
         }
+        
+        
     }
     
     @FXML
     public void volumeDownButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
-            if(sliderVolume.getValue() - 10 > 0){
-                sliderVolume.setValue(sliderVolume.getValue() - 10);
-            }else{
-                sliderVolume.setValue(0);
+            if(mediaPlayer != null){
+                if(!mediaPlayer.getStatus().equals(Status.STOPPED)){
+                    if(sliderVolume.getValue() - 10 > 0)
+                        sliderVolume.setValue(sliderVolume.getValue() - 10);
+                    else
+                        sliderVolume.setValue(0);
+                }
             }
         }
     }
@@ -340,10 +398,48 @@ public class MainFXMLController {
     @FXML
     public void volumeUpButton(MouseEvent event){
         if(event.getButton() == MouseButton.PRIMARY){
-            if(sliderVolume.getValue() + 10 < 100){
-                sliderVolume.setValue(sliderVolume.getValue() + 10);
-            }else{
-                sliderVolume.setValue(100);
+            if(mediaPlayer != null){
+                if(!mediaPlayer.getStatus().equals(Status.STOPPED)){
+                    if(sliderVolume.getValue() + 10 < 100)
+                        sliderVolume.setValue(sliderVolume.getValue() + 10);
+                    else
+                        sliderVolume.setValue(100);
+                }
+            }
+        }
+    }
+    
+    @FXML
+    public void rateDownButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(mediaPlayer != null){
+                if(!mediaPlayer.getStatus().equals(Status.STOPPED)){
+                    if(sliderRate.getValue() - 0.1 > 0)
+                        sliderRate.setValue(sliderRate.getValue() - 0.1);
+                    else
+                        sliderRate.setValue(0);
+                }
+            }
+        }
+    }
+    
+    @FXML
+    public void rateNormalState(MouseEvent event){
+        if(event.getButton() == MouseButton.SECONDARY){
+            sliderRate.setValue(1);
+        }
+    }
+    
+    @FXML
+    public void rateUpButton(MouseEvent event){
+        if(event.getButton() == MouseButton.PRIMARY){
+            if(mediaPlayer != null){
+                if(!mediaPlayer.getStatus().equals(Status.STOPPED)){
+                    if(sliderRate.getValue() + 0.1 < 2)
+                        sliderRate.setValue(sliderRate.getValue() + 0.1);
+                    else
+                        sliderRate.setValue(2);
+                }
             }
         }
     }
@@ -351,20 +447,42 @@ public class MainFXMLController {
     @FXML
     public void equalizerButton(MouseEvent event){
        if(event.getButton() == MouseButton.PRIMARY){
-           
+           if(mediaPlayer != null){
+                if(!mediaPlayer.getStatus().equals(Status.STOPPED)){
+                    
+                }
+           }
        }
     }
 
+    @FXML
+    public void muteUnmuteButton(MouseEvent event){
+       if(event.getButton() == MouseButton.PRIMARY){
+           if(event.getButton() == MouseButton.PRIMARY){
+            if(mediaPlayer != null){
+                if(mediaPlayer.isMute()){
+                    imageViewMuteUnmute.setImage(muteImage);
+                    mediaPlayer.setMute(false);
+                }
+                else{
+                    imageViewMuteUnmute.setImage(unmuteImage);
+                    mediaPlayer.setMute(true);
+                }
+            }
+        }
+       }
+    }
     
     public void setColors(Image image) {
-
         int maximum = 0;
-        DoubletListing<Integer, Color> list = new DoubletListing<>();
+        Color firstColor = Color.BLACK;
+        Color secondColor, thirdColor, firstFontColor, secondFontColor;
+        DoubletListing<Integer, Color> listingColorCount = new DoubletListing<>();
 
-        for (int i = 0; i < image.getWidth(); i += 30) {
-            for (int j = 0; j < image.getHeight(); j += 30) {
-               Color color = image.getPixelReader().getColor(i, j);
-                Doublet<Integer, Color> doublet = list.getDoubletForSecondElement(color);
+        for (int i = 0; i < image.getWidth(); i += 20) {
+            for (int j = 0; j < image.getHeight(); j += 20) {
+                Color color = image.getPixelReader().getColor(i, j);
+                Doublet<Integer, Color> doublet = listingColorCount.getDoubletForSecondElement(color);
 
                 if (doublet != null) {//exist
                     int number = doublet.getFirstElement() + 1;
@@ -374,53 +492,63 @@ public class MainFXMLController {
                         maximum = number;
                     }
                 } else {
-                    list.addToBack(1, color);
+                    listingColorCount.addToBack(1, color);
                 }
+                color = null;
+                doublet = null;
             }
         }
 
         secondColor = firstColor;
         
-        if(list.getSize() > 1){
+        if(listingColorCount.getSize() > 1){
             while(secondColor.equals(firstColor)){
-                int position = colorRandom.nextInt((int)list.getSize()-1);
-                secondColor =  list.get((long)position).getSecondElement();
+                int position = colorRandom.nextInt((int)listingColorCount.getSize()-1);
+                secondColor =  listingColorCount.get((long)position).getSecondElement();
             }
         }
         
-       thirdColor = secondColor;
-        if(list.getSize() > 2){
+        thirdColor = secondColor;
+        if(listingColorCount.getSize() > 2){
             while(thirdColor.equals(firstColor) || thirdColor.equals(secondColor) ){
-                int position = colorRandom.nextInt((int)list.getSize()-1);
-                thirdColor =  list.get((long)position).getSecondElement();
+                int position = colorRandom.nextInt((int)listingColorCount.getSize()-1);
+                thirdColor =  listingColorCount.get((long)position).getSecondElement();
             }
         }
         
-        list.clear();
-        fontColor = (firstColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;
-        list = null;
+        listingColorCount.clear();
+        firstFontColor = (firstColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;
+        secondFontColor = (secondColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;
         
-       labelTitle.setTextFill(fontColor);
-       labelAlbum.setTextFill(fontColor);
-       labelArtist.setTextFill(fontColor);
-       labelGenre.setTextFill(fontColor);
-       labelDuration.setTextFill(fontColor);
-       labelProgress.setTextFill(fontColor);
+        labelTitle.setTextFill(secondFontColor);
+        labelAlbum.setTextFill(secondFontColor);
+        labelArtist.setTextFill(secondFontColor);
+        labelGenre.setTextFill(secondFontColor);
+        
+        labelDuration.setTextFill(firstFontColor);
+        labelProgress.setTextFill(firstFontColor);
+        labelSongsCount.setTextFill(firstFontColor);
+     
+        Stop stop1 = new Stop(0, secondColor);
+        Stop stop2 = new Stop(0.4, thirdColor);
+        Stop stop3 = new Stop(1, firstColor);
+        
+        LinearGradient mainLinearGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stop1,stop2,stop3);
 
-       Stop[] stops = new Stop[] { new Stop(0, secondColor), new Stop(0.4, thirdColor),new Stop(1, firstColor)};
-       LinearGradient mainLinearGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
-       
-       BackgroundFill bf = new BackgroundFill(mainLinearGradient,CornerRadii.EMPTY,Insets.EMPTY);
-       Background background = new Background(bf);
-       paneImage.setBackground(background);
-       gridPaneButtons.setStyle("-fx-background-color: "+toHexString(firstColor)+";");
-       
-       mainLinearGradient = null;
-       stops = null;
-       bf  = null;
-       background  = null;
+        BackgroundFill bf = new BackgroundFill(mainLinearGradient,CornerRadii.EMPTY,Insets.EMPTY);
+        Background background = new Background(bf);
+        paneImage.setBackground(background);
+        String hex = toHexString(firstColor);
+        gridPaneButtons.setStyle("-fx-background-color: "+hex+";");
 
-       System.gc();
+        stop1 = stop2 = stop3 = null;
+        mainLinearGradient = null;
+        bf  = null;
+        background  = null;
+        hex = null;
+        firstColor = secondColor = thirdColor = secondFontColor = firstFontColor = null;
+
+        System.gc();
     }
     private String format(double val) {
         String in = Integer.toHexString((int) Math.round(val * 255));
