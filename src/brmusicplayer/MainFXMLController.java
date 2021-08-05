@@ -9,12 +9,13 @@ import java.util.Random;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import data_structures.Doublet;
 import data_structures.DoubletListing;
 import data_structures.Nodet;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
@@ -69,9 +70,6 @@ public class MainFXMLController {
     @FXML // fx:id="imageViewCoverArt"
     private ImageView imageViewCoverArt; // Value injected by FXMLLoader
 
-    @FXML // fx:id="anchorPaneTags"
-    private AnchorPane anchorPaneTags; // Value injected by FXMLLoader
-
     @FXML // fx:id="labelTitle"
     private Label labelTitle; // Value injected by FXMLLoader
 
@@ -89,7 +87,6 @@ public class MainFXMLController {
     private Color firstColor;
     private Color secondColor;
     private Color thirdColor;
-    private Color fourthColor;
     private Color fontColor;
     
     private final Random colorRandom;
@@ -106,7 +103,6 @@ public class MainFXMLController {
         firstColor = new Color(0,0,0,1.0);
         secondColor = new Color(0,0,0,1.0);
         thirdColor = new Color(0,0,0,1.0);
-        fourthColor = new Color(0,0,0,1.0);
         fontColor = new Color(0,0,0,1.0);
         colorRandom = new Random(System.currentTimeMillis());
         listingMusic = new DoubletListing<>();
@@ -170,7 +166,12 @@ public class MainFXMLController {
             
             //Get the artwork from the mp3 file:
             Artwork artWork = tag.getFirstArtwork();
-            Image coverArt = SwingFXUtils.toFXImage((BufferedImage)artWork.getImage(), null);
+            BufferedImage resizedImage = new BufferedImage(600,600,BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2 = resizedImage.createGraphics();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.drawImage((BufferedImage)artWork.getImage(), 0, 0,600,600,null);
+            g2.dispose();
+            Image coverArt = SwingFXUtils.toFXImage((resizedImage), null);
             setColors(coverArt);
             
             imageViewCoverArt.setImage(coverArt);
@@ -249,8 +250,8 @@ public class MainFXMLController {
         int maximum = 0;
         DoubletListing<Integer, Color> list = new DoubletListing<>();
 
-        for (int i = 0; i < image.getWidth(); i += 12) {
-            for (int j = 0; j < image.getHeight(); j += 12) {
+        for (int i = 0; i < image.getWidth(); i += 15) {
+            for (int j = 0; j < image.getHeight(); j += 15) {
                 Color color = image.getPixelReader().getColor(i, j);
                 Doublet<Integer, Color> doublet = list.getDoubletForSecondElement(color);
 
@@ -284,17 +285,7 @@ public class MainFXMLController {
             }
         }
         
-        fourthColor = thirdColor;
-        if(list.getSize() > 3){
-            while(fourthColor.equals(firstColor) || fourthColor.equals(secondColor) || fourthColor.equals(thirdColor) ){
-                int position = colorRandom.nextInt((int)list.getSize()-1); 
-                fourthColor = list.get((long)position).getSecondElement();
-            }
-        }
-        
-        double red = fourthColor.getRed();
-        fontColor = (red >= 155) ? Color.BLACK : Color.WHITE;
-        
+        fontColor = (firstColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;;
         list.clear();
         list = null;
        
@@ -306,15 +297,13 @@ public class MainFXMLController {
        labelDuration.setTextFill(fontColor);
        labelProgress.setTextFill(fontColor);
 
-       Stop[] stops = new Stop[] { new Stop(0, firstColor), new Stop(0.4, secondColor), new Stop(0.8, thirdColor), new Stop(1, fourthColor)};
+       Stop[] stops = new Stop[] { new Stop(0, secondColor), new Stop(0.4, thirdColor),new Stop(1, firstColor)};
        LinearGradient mainLinearGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
        
        BackgroundFill bf = new BackgroundFill(mainLinearGradient,CornerRadii.EMPTY,Insets.EMPTY);
        Background background = new Background(bf);
        paneImage.setBackground(background);
-       anchorPaneTags.setBackground(background);
-       
-       gridPaneButtons.setStyle("-fx-background-color: "+toHexString(fourthColor)+";");
+       gridPaneButtons.setStyle("-fx-background-color: "+toHexString(firstColor)+";");
        
        mainLinearGradient = null;
        stops = null;
