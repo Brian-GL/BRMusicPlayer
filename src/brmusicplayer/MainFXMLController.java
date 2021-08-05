@@ -5,6 +5,7 @@
  */
 package brmusicplayer;
 
+import data_structures.ColorCount;
 import java.util.Random;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
@@ -13,7 +14,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import data_structures.Doublet;
 import data_structures.DoubletListing;
+import data_structures.Mode;
 import data_structures.Nodet;
+import data_structures.PriorityQueue;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -351,15 +354,16 @@ public class MainFXMLController {
            
        }
     }
+
     
     public void setColors(Image image) {
 
         int maximum = 0;
         DoubletListing<Integer, Color> list = new DoubletListing<>();
 
-        for (int i = 0; i < image.getWidth(); i += 15) {
-            for (int j = 0; j < image.getHeight(); j += 15) {
-                Color color = image.getPixelReader().getColor(i, j);
+        for (int i = 0; i < image.getWidth(); i += 30) {
+            for (int j = 0; j < image.getHeight(); j += 30) {
+               Color color = image.getPixelReader().getColor(i, j);
                 Doublet<Integer, Color> doublet = list.getDoubletForSecondElement(color);
 
                 if (doublet != null) {//exist
@@ -370,7 +374,7 @@ public class MainFXMLController {
                         maximum = number;
                     }
                 } else {
-                    list.addToBack(0, color);
+                    list.addToBack(1, color);
                 }
             }
         }
@@ -392,10 +396,9 @@ public class MainFXMLController {
             }
         }
         
-        fontColor = (firstColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;;
         list.clear();
+        fontColor = (firstColor.getRed() > 0.5) ? Color.BLACK : Color.WHITE;
         list = null;
-       
         
        labelTitle.setTextFill(fontColor);
        labelAlbum.setTextFill(fontColor);

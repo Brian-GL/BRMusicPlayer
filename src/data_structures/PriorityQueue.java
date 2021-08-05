@@ -42,29 +42,6 @@ public class PriorityQueue<T> extends Structure<T>{
                     auxiliar = auxiliar.getNext();
             }
     }
-
-    /*
-    public PriorityQueue(Matrix<T>.Row row, Mode mode){
-            super();
-            this._mode = mode;
-            Matrix<T>.Column auxiliar = row.Front();
-            while(auxiliar != null) {
-                    this.Enqueue(auxiliar.Value());
-                    auxiliar = auxiliar.Next();
-            }
-    }
-
- 
-    public PriorityQueue(Graph<T> graph, Mode mode){
-            super();
-            this._mode = mode;
-            Graph<T>.Vertex auxiliar = graph.Front();
-            while(auxiliar != null) {
-                    this.Enqueue(auxiliar.Value());
-                    auxiliar = auxiliar.Next();
-            }
-    }
-    */
    
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public PriorityQueue(Structure<T> structure, Mode mode) { 
@@ -78,7 +55,7 @@ public class PriorityQueue<T> extends Structure<T>{
             }
     }
 
-    public Mode Mode() {return this._mode;}
+    public Mode mode() {return this._mode;}
 
     public void enqueue(T element) {
 
@@ -87,8 +64,7 @@ public class PriorityQueue<T> extends Structure<T>{
         else {
 
                 switch(this._mode) {
-                        case ASCENDING:
-                        {	
+                        case ASCENDING -> {	
                                 T middleElement = this._elements.getMediumElement();
 
                                 Integer comparator = this._comparator.compare(element,middleElement);
@@ -144,8 +120,7 @@ public class PriorityQueue<T> extends Structure<T>{
                                                 this._elements.insertPreviousTo(auxiliar,element);
                                 }
                         }
-                        break;
-                        case DESCENDING:{
+                        case DESCENDING -> {
                                 T middleElement = this._elements.getMediumElement();
 
                                 Integer comparator = this._comparator.compare(element,middleElement);
@@ -201,7 +176,6 @@ public class PriorityQueue<T> extends Structure<T>{
                                                 this._elements.insertNextTo(auxiliar,element);
                                 }
                         }
-                        break;
                 }
         }
     }
