@@ -5,48 +5,54 @@
  */
 package brmusicplayer;
 
-import com.sun.glass.events.MouseEvent;
 import java.util.Random;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import data_structures.Doublet;
 import data_structures.DoubletListing;
-import data_structures.Listing;
-import java.io.File;
+import data_structures.Nodet;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.List;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
+import org.jaudiotagger.tag.images.Artwork;
+import java.io.File;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.FileChooser;
+import javafx.util.Duration;
+import javafx.scene.control.Tooltip;
 
 public class MainFXMLController {
 
 
-    @FXML // fx:id="gridPaneMain"
-    private GridPane gridPaneMain; // Value injected by FXMLLoader
-
     @FXML // fx:id="gridPaneButtons"
     private GridPane gridPaneButtons; // Value injected by FXMLLoader
-
-    @FXML // fx:id="gridPaneInformationProgress"
-    private GridPane gridPaneInformationProgress; // Value injected by FXMLLoader
-
-    @FXML // fx:id="gridPaneProgress"
-    private ColumnConstraints gridPaneProgress; // Value injected by FXMLLoader
 
     @FXML // fx:id="sliderProgress"
     private Slider sliderProgress; // Value injected by FXMLLoader
@@ -56,12 +62,6 @@ public class MainFXMLController {
 
     @FXML // fx:id="labelDuration"
     private Label labelDuration; // Value injected by FXMLLoader
-
-    @FXML // fx:id="gridPaneControls"
-    private GridPane gridPaneControls; // Value injected by FXMLLoader
-
-    @FXML // fx:id="gridPaneInformation"
-    private GridPane gridPaneInformation; // Value injected by FXMLLoader
 
     @FXML // fx:id="paneImage"
     private Pane paneImage; // Value injected by FXMLLoader
@@ -84,9 +84,6 @@ public class MainFXMLController {
     @FXML // fx:id="labelGenre"
     private Label labelGenre; // Value injected by FXMLLoader
     
-    @FXML // fx:id="buttonOpenFile"
-    private Button buttonOpenFile; // Value injected by FXMLLoader
-
     
     //Colors
     private Color firstColor;
@@ -96,11 +93,13 @@ public class MainFXMLController {
     private Color fontColor;
     
     private final Random colorRandom;
-    
+    private int actualLenght;
     private MediaPlayer mediaPlayer;
+    private FileChooser fileChooser;
     
     //Data Stuctures
-    private Listing<String> listingMusic;
+    private DoubletListing<String,String> listingMusic;
+    private Nodet<Doublet<String,String>> actualNodet;
     
     
     public MainFXMLController(){
@@ -110,45 +109,139 @@ public class MainFXMLController {
         fourthColor = new Color(0,0,0,1.0);
         fontColor = new Color(0,0,0,1.0);
         colorRandom = new Random(System.currentTimeMillis());
+        listingMusic = new DoubletListing<>();
+        fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose Music Files");
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Music Files (*.mp3)", "*.mp3");
+        fileChooser.getExtensionFilters().add(extFilter);
     }
     
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
-        assert gridPaneMain != null : "fx:id=\"gridPaneMain\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert gridPaneButtons != null : "fx:id=\"gridPaneButtons\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert gridPaneInformationProgress != null : "fx:id=\"gridPaneInformationProgress\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert gridPaneProgress != null : "fx:id=\"gridPaneProgress\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert sliderProgress != null : "fx:id=\"sliderProgress\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelProgress != null : "fx:id=\"labelProgress\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelDuration != null : "fx:id=\"labelDuration\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert gridPaneControls != null : "fx:id=\"gridPaneControls\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert buttonOpenFile != null : "fx:id=\"buttonOpenFile\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert gridPaneInformation != null : "fx:id=\"gridPaneInformation\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert paneImage != null : "fx:id=\"paneImage\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert imageViewCoverArt != null : "fx:id=\"imageViewCoverArt\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert anchorPaneTags != null : "fx:id=\"anchorPaneTags\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelTitle != null : "fx:id=\"labelTitle\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelArtist != null : "fx:id=\"labelArtist\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelAlbum != null : "fx:id=\"labelAlbum\" was not injected: check your FXML file 'MainFXML.fxml'.";
-        assert labelGenre != null : "fx:id=\"labelGenre\" was not injected: check your FXML file 'MainFXML.fxml'.";
-
-
-        Image image = new Image(BRMusicPlayer.class.getResourceAsStream( "../resources/images/siu.jpg" ));
-        imageViewCoverArt.setImage(image);
-        setColors(image);
     }
     
     @FXML
-    private void openFile(javafx.scene.input.MouseEvent evt){
-        FileChooser fileChooser = new FileChooser();
-        File file = fileChooser.showOpenDialog(null);
-        String path = file.toURI().toString();
-        if(path != null){
-            Media m = new Media(path);
-            mediaPlayer = new MediaPlayer(m);
-            mediaPlayer.play();
+    private void openFiles(javafx.scene.input.MouseEvent evt){
+        
+        List<File> files = fileChooser.showOpenMultipleDialog(null);
+        listingMusic.clear();
+        if(files != null){
+            
+            if(!files.isEmpty()){
+                files.forEach(file -> {
+                    listingMusic.addToBack(file.getAbsolutePath(),file.toURI().toString());
+                });
+                
+                actualNodet = listingMusic.getFrontNodet();
+                loadMetadata();
+                openMusic();
+            }
+           
         }
+        files = null;
+        
+    }
+    
+    private void loadMetadata(){
+        try {
+            File readFile = new File(actualNodet.getValue().getFirstElement());
+            AudioFile audioFile = AudioFileIO.read(readFile);
+            Tag tag = audioFile.getTag();
+            String title = tag.getFirst(FieldKey.TITLE);
+            String artist = tag.getFirst(FieldKey.ARTIST);
+            String album = tag.getFirst(FieldKey.ALBUM);
+            String genre = tag.getFirst(FieldKey.GENRE);
+            actualLenght = audioFile.getAudioHeader().getTrackLength()*1000;
+            
+            Tooltip titleTooltip = new Tooltip("Title: "+title);
+            Tooltip artistTooltip = new Tooltip("Artist: "+artist);
+            Tooltip albumTooltip = new Tooltip("Album: "+album);
+            Tooltip genreTooltip = new Tooltip("Genre: "+genre);
+            
+            labelTitle.setText(title);
+            labelTitle.setTooltip(titleTooltip);
+            labelArtist.setText(artist);
+            labelArtist.setTooltip(artistTooltip);
+            labelAlbum.setText(album);
+            labelAlbum.setTooltip(albumTooltip);
+            labelGenre.setText(genre);
+            labelGenre.setTooltip(genreTooltip);
+            
+            //Get the artwork from the mp3 file:
+            Artwork artWork = tag.getFirstArtwork();
+            Image coverArt = SwingFXUtils.toFXImage((BufferedImage)artWork.getImage(), null);
+            setColors(coverArt);
+            
+            imageViewCoverArt.setImage(coverArt);
+            readFile = null;
+            coverArt = null;
+            titleTooltip = null;
+            artistTooltip = null;
+            albumTooltip = null;
+            genreTooltip = null;
+        } catch (CannotReadException | IOException | TagException | ReadOnlyFileException | InvalidAudioFrameException ex) {
+            System.out.println("brmusicplayer.MainFXMLController.loadMetadata(): "+ex.getMessage());
+        }
+    }
+    
+    public void openMusic(){
+        
+        if(mediaPlayer != null){
+            if(mediaPlayer.getStatus().equals(Status.PLAYING)
+                    || mediaPlayer.getStatus().equals(Status.PAUSED)){
+                mediaPlayer.stop();
+            }
+            
+            mediaPlayer.dispose();
+            
+            mediaPlayer = null;
+            System.gc();
+        }
+        
+        Media media = new Media(actualNodet.getValue().getSecondElement());
+        mediaPlayer = new MediaPlayer(media);
+        
+        mediaPlayer.currentTimeProperty().addListener((ObservableValue<? extends javafx.util.Duration> observable, javafx.util.Duration oldValue, javafx.util.Duration newValue) -> {
+            Double currentTime = newValue.toSeconds();
+            sliderProgress.setValue(currentTime);
+            labelProgress.setText(secondsToString(currentTime.longValue()));
+            currentTime = null;
+        });
+        
+
+        mediaPlayer.setOnReady(() -> {
+            
+            Duration total = new Duration(actualLenght);
+            Double seconds = total.toSeconds();
+            sliderProgress.setMax(seconds);
+            labelDuration.setText(secondsToString(seconds.longValue()));
+            seconds = null;
+        });
+        
+
+        mediaPlayer.play();
+        media = null;
+        
+    }
+    @FXML
+    public void onMouseSlider(){
+        mediaPlayer.seek(javafx.util.Duration.seconds(sliderProgress.getValue()));
+        
+    }
+    
+    @FXML
+    public void pauseVideo(ActionEvent event){
+        mediaPlayer.pause();
+    }
+    @FXML
+    public void stopVideo(ActionEvent event){
+        mediaPlayer.stop();
+    }
+    @FXML
+    public void playVideo(ActionEvent event){
+        mediaPlayer.play();
+        mediaPlayer.setRate(1);
     }
     
     public void setColors(Image image) {
@@ -199,7 +292,7 @@ public class MainFXMLController {
             }
         }
         
-        double red = firstColor.getRed();
+        double red = fourthColor.getRed();
         fontColor = (red >= 155) ? Color.BLACK : Color.WHITE;
         
         list.clear();
@@ -214,36 +307,20 @@ public class MainFXMLController {
        labelProgress.setTextFill(fontColor);
 
        Stop[] stops = new Stop[] { new Stop(0, firstColor), new Stop(0.4, secondColor), new Stop(0.8, thirdColor), new Stop(1, fourthColor)};
-       //Stop[] stops1 = new Stop[] { new Stop(0, fourthColor), new Stop(1, thirdColor)};
        LinearGradient mainLinearGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE, stops);
-       //LinearGradient nonMainLinearGradient = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE, stops1);
        
        BackgroundFill bf = new BackgroundFill(mainLinearGradient,CornerRadii.EMPTY,Insets.EMPTY);
        Background background = new Background(bf);
        paneImage.setBackground(background);
        anchorPaneTags.setBackground(background);
        
-       /*
-       BackgroundFill bf1 = new BackgroundFill(nonMainLinearGradient,CornerRadii.EMPTY,Insets.EMPTY);
-       Background background1 = new Background(bf1);
-       
-       gridPaneControls.setBackground(background1);
-       gridPaneInformationProgress.setBackground(background1);
-       sliderProgress.setBackground(background1);
-        
-       */
-       
        gridPaneButtons.setStyle("-fx-background-color: "+toHexString(fourthColor)+";");
        
        mainLinearGradient = null;
-       //nonMainLinearGradient = null;
-       
        stops = null;
-       
        bf  = null;
        background  = null;
 
-       
        System.gc();
     }
     private String format(double val) {
@@ -254,6 +331,17 @@ public class MainFXMLController {
         return "#" + (format(value.getRed()) + format(value.getGreen()) + format(value.getBlue()) + format(value.getOpacity()))
                 .toUpperCase();
     }
+
+    private String secondsToString(long seconds) {
+        long absSeconds = Math.abs(seconds);
+        String positive = String.format(
+                "%02d:%02d:%02d",
+                absSeconds / 3600,
+                (absSeconds % 3600) / 60,
+                absSeconds % 60);
+        return seconds < 0 ? "-" + positive : positive;
+    }
+    
     
 }
 
